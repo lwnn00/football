@@ -3,10 +3,89 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>足球让球盘口记录软件</title>
+<title>足球让球/大小盘口记录软件</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 /* 原有样式保持不变，新增以下样式 */
+.handicap-tabs {
+    display: flex;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #eaeaea;
+}
+.handicap-tab {
+    flex: 1;
+    padding: 12px 16px;
+    background: #f5f5f5;
+    border: none;
+    border-radius: 8px 8px 0 0;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    margin-right: 4px;
+    color: #666;
+}
+.handicap-tab.active {
+    background: #2a5298;
+    color: white;
+}
+.handicap-tab:last-child {
+    margin-right: 0;
+}
+.handicap-content {
+    display: none;
+}
+.handicap-content.active {
+    display: block;
+}
+.size-recommendation-up {
+    color: #28a745;
+    background-color: rgba(40, 167, 69, 0.08);
+    border: 2px solid #28a745;
+}
+.size-recommendation-down {
+    color: #dc3545;
+    background-color: rgba(220, 53, 69, 0.08);
+    border: 2px solid #dc3545;
+}
+.size-recommendation-neutral {
+    color: #6c757d;
+    background-color: rgba(108, 117, 125, 0.08);
+    border: 2px solid #6c757d;
+}
+.recommendation-label {
+    font-size: 16px;
+    color: #666;
+    margin-bottom: 10px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.recommendation-label i {
+    margin-right: 8px;
+    font-size: 18px;
+}
+.dual-recommendation {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+.recommendation-box {
+    flex: 1;
+    background-color: white;
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+.history-table th:nth-child(1) {
+    width: 80px;
+}
+.history-table th:nth-child(2) {
+    width: 100px;
+}
+/* 原有样式保持不变，只添加新增部分 */
 .user-section {
     position: absolute;
     top: 16px;
@@ -318,43 +397,6 @@ select:focus, input:focus {
     margin: 0;
     padding: 12px 10px;
 }
-.recommendation-box {
-    background-color: white;
-    border-radius: 10px;
-    padding: 16px;
-    text-align: center;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-    margin-bottom: 20px;
-}
-.recommendation-label {
-    font-size: 16px;
-    color: #666;
-    margin-bottom: 10px;
-    font-weight: 500;
-}
-.recommendation-result {
-    font-size: 26px;
-    font-weight: bold;
-    padding: 14px;
-    border-radius: 8px;
-    margin: 8px 0;
-    transition: all 0.3s ease;
-}
-.recommendation-up {
-    color: #28a745;
-    background-color: rgba(40, 167, 69, 0.08);
-    border: 2px solid #28a745;
-}
-.recommendation-down {
-    color: #dc3545;
-    background-color: rgba(220, 53, 69, 0.08);
-    border: 2px solid #dc3545;
-}
-.recommendation-neutral {
-    color: #6c757d;
-    background-color: rgba(108, 117, 125, 0.08);
-    border: 2px solid #6c757d;
-}
 .chart-container {
     width: 100%;
     height: 280px;
@@ -488,6 +530,14 @@ footer {
         position: static;
         margin-bottom: 10px;
         text-align: center;
+    }
+    .handicap-tab {
+        padding: 10px 12px;
+        font-size: 14px;
+    }
+    .dual-recommendation {
+        flex-direction: column;
+        gap: 10px;
     }
 }
 /* 小屏幕手机优化 */
@@ -643,9 +693,8 @@ select {
 
 <div class="container">
     <header>
-
-        <h1>足球让球盘口记录软件</h1>
-        <div class="subtitle">记录、分析、推荐足球让球盘口数据</div>
+        <h1>足球让球/大小盘口记录软件</h1>
+        <div class="subtitle">记录、分析、推荐足球让球盘和大小盘数据</div>
         <div class="user-section">
             <div class="user-info" id="userInfo">
                 <!-- 用户信息将在这里动态显示 -->
@@ -660,56 +709,122 @@ select {
         <div id="trialInfo" class="trial-info" style="display: none;">
             您是试用用户，剩余保存次数: <span id="trialCount" class="trial-count">18</span> 次
         </div>
-        <div class="input-section">
-            <h2 class="section-title">盘口数据录入</h2>
-            <div class="form-group">
-                <label for="initial-handicap">初始盘口</label>
-                <select id="initial-handicap">
-                    <option value="">请选择</option>
-                    <!-- 盘口从0到3，递增度为0.25 -->
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="current-handicap">即时盘口</label>
-                <select id="current-handicap">
-                    <option value="">请选择</option>
-                    <!-- 盘口从0到3，递增度为0.25 -->
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="initial-water">初始水位</label>
-                <select id="initial-water">
-                    <option value="">请选择</option>
-                    <!-- 水位从0.7到1.2，递增度为0.01 -->
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="current-water">即时水位</label>
-                <select id="current-water">
-                    <option value="">请选择</option>
-                    <!-- 水位从0.7到1.2，递增度为0.01 -->
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="historical-record">历史战绩</label>
-                <select id="historical-record">
-                    <option value="">请选择</option>
-                    <option value="win">赢</option>
-                    <option value="loss">输</option>
-                </select>
-            </div>
-            <div class="auto-calculation-note">提示：选择所有选项，保存记录推荐结果将自动生成</div>
-            <div class="button-group">
-                <button class="btn btn-success" id="save-btn">保存记录</button>
-                <button class="btn btn-secondary" id="reset-btn">重置表单</button>
+        
+        <!-- 盘口类型切换标签 -->
+        <div class="handicap-tabs">
+            <button class="handicap-tab active" data-tab="asian-handicap">让球盘</button>
+            <button class="handicap-tab" data-tab="over-under">大小盘</button>
+        </div>
+        
+        <!-- 让球盘内容 -->
+        <div id="asian-handicap-content" class="handicap-content active">
+            <div class="input-section">
+                <h2 class="section-title">让球盘数据录入</h2>
+                <div class="form-group">
+                    <label for="asian-initial-handicap">初始盘口</label>
+                    <select id="asian-initial-handicap">
+                        <option value="">请选择</option>
+                        <!-- 盘口从0到3，递增度为0.25 -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="asian-current-handicap">即时盘口</label>
+                    <select id="asian-current-handicap">
+                        <option value="">请选择</option>
+                        <!-- 盘口从0到3，递增度为0.25 -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="asian-initial-water">初始水位</label>
+                    <select id="asian-initial-water">
+                        <option value="">请选择</option>
+                        <!-- 水位从0.7到1.2，递增度为0.01 -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="asian-current-water">即时水位</label>
+                    <select id="asian-current-water">
+                        <option value="">请选择</option>
+                        <!-- 水位从0.7到1.2，递增度为0.01 -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="asian-historical-record">历史战绩</label>
+                    <select id="asian-historical-record">
+                        <option value="">请选择</option>
+                        <option value="win">赢</option>
+                        <option value="loss">输</option>
+                    </select>
+                </div>
+                <div class="auto-calculation-note">提示：选择所有选项，保存记录推荐结果将自动生成</div>
+                <div class="button-group">
+                    <button class="btn btn-success" id="save-asian-btn">保存让球盘记录</button>
+                    <button class="btn btn-secondary" id="reset-asian-btn">重置表单</button>
+                </div>
             </div>
         </div>
+        
+        <!-- 大小盘内容 -->
+        <div id="over-under-content" class="handicap-content">
+            <div class="input-section">
+                <h2 class="section-title">大小盘数据录入</h2>
+                <div class="form-group">
+                    <label for="size-initial-handicap">初始大小盘</label>
+                    <select id="size-initial-handicap">
+                        <option value="">请选择</option>
+                        <!-- 大小盘从1.5到4，递增度为0.25 -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="size-current-handicap">即时大小盘</label>
+                    <select id="size-current-handicap">
+                        <option value="">请选择</option>
+                        <!-- 大小盘从1.5到4，递增度为0.25 -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="size-initial-water">初始水位</label>
+                    <select id="size-initial-water">
+                        <option value="">请选择</option>
+                        <!-- 水位从0.7到1.2，递增度为0.01 -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="size-current-water">即时水位</label>
+                    <select id="size-current-water">
+                        <option value="">请选择</option>
+                        <!-- 水位从0.7到1.2，递增度为0.01 -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="size-historical-record">历史战绩</label>
+                    <select id="size-historical-record">
+                        <option value="">请选择</option>
+                        <option value="win">赢</option>
+                        <option value="loss">输</option>
+                    </select>
+                </div>
+                <div class="auto-calculation-note">提示：选择所有选项，保存记录推荐结果将自动生成</div>
+                <div class="button-group">
+                    <button class="btn btn-success" id="save-size-btn">保存大小盘记录</button>
+                    <button class="btn btn-secondary" id="reset-size-btn">重置表单</button>
+                </div>
+            </div>
+        </div>
+        
         <div class="result-section">
             <h2 class="section-title">推荐结果与统计</h2>
-            <div class="recommendation-box">
-                <div class="recommendation-label">推荐结果</div>
-                <div id="recommendation-result" class="recommendation-result recommendation-neutral">等待输入中....</div>
-                <div id="recommendation-details" style="font-size: 13px; color: #666; margin-top: 8px; line-height: 1.4;"></div>
+            <div class="dual-recommendation">
+                <div class="recommendation-box">
+                    <div class="recommendation-label">让球盘推荐</div>
+                    <div id="asian-recommendation-result" class="recommendation-result recommendation-neutral">等待输入中....</div>
+                    <div id="asian-recommendation-details" style="font-size: 13px; color: #666; margin-top: 8px; line-height: 1.4;"></div>
+                </div>
+                <div class="recommendation-box">
+                    <div class="recommendation-label">大小盘推荐</div>
+                    <div id="size-recommendation-result" class="recommendation-result size-recommendation-neutral">等待输入中....</div>
+                    <div id="size-recommendation-details" style="font-size: 13px; color: #666; margin-top: 8px; line-height: 1.4;"></div>
+                </div>
             </div>
             <div class="chart-container">
                 <canvas id="stats-chart"></canvas>
@@ -728,6 +843,7 @@ select {
                     <table class="history-table">
                         <thead>
                             <tr>
+                                <th>盘口类型</th>
                                 <th>盘口变化</th>
                                 <th>水位变化</th>
                                 <th>历史战绩</th>
@@ -745,7 +861,7 @@ select {
         </div>
     </div>
     <footer>
-        <p>足球让球盘口记录软件 &copy; 2025 | 数据仅供参考，娱乐就行</p>
+        <p>足球让球/大小盘口记录软件 &copy; 2025 | 数据仅供参考，娱乐就行</p>
     </footer>
 </div>
 
@@ -777,7 +893,7 @@ window.addEventListener('load', function() {
     }
 });
 // ============== 存储管理器（防止试用次数重置） ============== //
-// ============== 存储管理器（防止试用次数重置） ============== //
+
 const StorageManager = {
     // 使用多个存储位置
     setTrialData: function(username, data) {
@@ -1144,35 +1260,240 @@ const StorageManager = {
         return { restricted: false };
     }
 };
+
+// ============== 浏览器指纹管理器 ============== //
+const FingerprintManager = {
+    // 生成快速基础指纹（立即执行）
+    generateQuickFingerprint: function() {
+        const components = [
+            navigator.userAgent,
+            navigator.language,
+            screen.width + 'x' + screen.height,
+            screen.colorDepth,
+            new Date().getTimezoneOffset(),
+            !!window.sessionStorage,
+            !!window.localStorage
+        ];
+        
+        let hash = 0;
+        const str = components.join('|');
+        for (let i = 0; i < str.length; i++) {
+            const char = str.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash;
+        }
+        
+        const fingerprint = 'fp_' + Math.abs(hash).toString(36).substring(0, 12);
+        
+        // 存储到sessionStorage
+        sessionStorage.setItem('quick_fingerprint', fingerprint);
+        console.log('快速指纹已生成:', fingerprint);
+        
+        return fingerprint;
+    },
+    
+    // 生成详细指纹（需要Canvas）
+    generateDetailedFingerprint: function() {
+        try {
+            // Canvas指纹
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // 绘制一些内容
+            ctx.textBaseline = "top";
+            ctx.font = "14px 'Arial'";
+            ctx.fillStyle = "#f60";
+            ctx.fillRect(125, 1, 62, 20);
+            ctx.fillStyle = "#069";
+            ctx.fillText("FP@1.0", 2, 15);
+            ctx.fillStyle = "rgba(102, 204, 0, 0.7)";
+            ctx.fillText("FP@1.0", 4, 17);
+            
+            const canvasFingerprint = canvas.toDataURL();
+            
+            // 结合其他信息
+            const components = [
+                navigator.userAgent,
+                navigator.language,
+                navigator.platform,
+                screen.width + 'x' + screen.height,
+                screen.colorDepth,
+                new Date().getTimezoneOffset(),
+                canvasFingerprint.substring(0, 100) // 取前100个字符
+            ];
+            
+            let hash = 0;
+            const str = components.join('||');
+            for (let i = 0; i < str.length; i++) {
+                const char = str.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash;
+            }
+            
+            const fingerprint = Math.abs(hash).toString(16).padStart(8, '0');
+            
+            // 存储到多个位置
+            sessionStorage.setItem('detailed_fingerprint', fingerprint);
+            localStorage.setItem('last_fingerprint', fingerprint);
+            
+            console.log('详细指纹已生成:', fingerprint);
+            return fingerprint;
+            
+        } catch (error) {
+            console.warn('详细指纹生成失败，使用快速指纹:', error);
+            return this.generateQuickFingerprint();
+        }
+    },
+    
+    // 初始化指纹系统
+    init: function() {
+        console.log('初始化指纹系统...');
+        
+        // 1. 立即生成快速指纹
+        const quickFp = this.generateQuickFingerprint();
+        
+        // 2. 延迟生成详细指纹（避免阻塞页面加载）
+        setTimeout(() => {
+            this.generateDetailedFingerprint();
+			
+        }, 1000);
+        
+        // 3. 检查已有指纹
+        this.checkExistingFingerprint();
+        
+        return quickFp;
+    },
+    
+    // 检查现有指纹
+    checkExistingFingerprint: function() {
+        const existingFp = localStorage.getItem('last_fingerprint');
+        const currentQuickFp = sessionStorage.getItem('quick_fingerprint');
+        
+        if (existingFp) {
+            console.log('发现已有指纹记录:', existingFp.substring(0, 8) + '...');
+            
+            // 这里可以添加指纹验证逻辑
+            // 如果发现指纹不一致，可能用户清除了数据
+        }
+        
+        // 存储指纹生成时间
+        localStorage.setItem('fingerprint_init_time', Date.now().toString());
+    },
+    
+    // 获取当前指纹
+    getCurrentFingerprint: function() {
+        const detailedFp = sessionStorage.getItem('detailed_fingerprint');
+        const quickFp = sessionStorage.getItem('quick_fingerprint');
+        
+        return detailedFp || quickFp || 'unknown';
+    },
+    
+    // 验证指纹一致性（用于防清除）
+    verifyConsistency: function(username) {
+        const storedKey = `fp_${username}`;
+        const storedFingerprint = localStorage.getItem(storedKey);
+        const currentFingerprint = this.getCurrentFingerprint();
+        
+        if (storedFingerprint && storedFingerprint !== currentFingerprint) {
+            console.warn(`用户 ${username} 指纹不一致！`);
+            console.warn('存储的:', storedFingerprint);
+            console.warn('当前的:', currentFingerprint);
+            
+            // 记录可疑活动
+            this.recordSuspiciousActivity(username, 'fingerprint_mismatch');
+            return false;
+        }
+        
+        return true;
+    },
+    
+    // 记录可疑活动
+    recordSuspiciousActivity: function(username, type) {
+        const activityKey = `fp_activity_${username}`;
+        const now = Date.now();
+        
+        let activities = JSON.parse(localStorage.getItem(activityKey) || '[]');
+        activities.push({
+            timestamp: now,
+            type: type,
+            fingerprint: this.getCurrentFingerprint()
+        });
+        
+        // 只保留最近10条记录
+        if (activities.length > 10) {
+            activities = activities.slice(-10);
+        }
+        
+        localStorage.setItem(activityKey, JSON.stringify(activities));
+        
+        // 检查是否频繁变更
+        const oneDayAgo = now - (24 * 60 * 60 * 1000);
+        const recentActivities = activities.filter(a => a.timestamp > oneDayAgo);
+        
+        if (recentActivities.length > 3) {
+            console.warn(`用户 ${username} 24小时内指纹变更超过3次`);
+            return false;
+        }
+        
+        return true;
+    },
+    
+    // 存储用户关联指纹
+    storeUserFingerprint: function(username) {
+        const fingerprint = this.getCurrentFingerprint();
+        const storageKey = `fp_${username}`;
+        
+        localStorage.setItem(storageKey, fingerprint);
+        
+        // 同时存储时间戳
+        const timestampKey = `fp_time_${username}`;
+        localStorage.setItem(timestampKey, Date.now().toString());
+        
+        console.log(`为用户 ${username} 存储指纹: ${fingerprint}`);
+        return fingerprint;
+    }
+}; 
 // 用户管理系统
 const UserSystem = {
     // 初始化用户数据
     init: function() {
-            // 迁移旧数据到新存储系统
-            StorageManager.migrateOldData();
+		        console.log('开始初始化用户系统...');
+		        
+		        // ========== 第一步：初始化指纹系统 ========== //
+		        FingerprintManager.init();
+		        
+		        // ========== 第二步：迁移旧数据 ========== //
+		        StorageManager.migrateOldData();
+		        
+		        // ========== 第三步：初始化邀请码 ========== //
+		        if (!localStorage.getItem('invitationCodes')) {
+		            localStorage.setItem('invitationCodes', JSON.stringify([]));
+		        }
+		
+		        // ========== 第四步：初始化默认用户 ========== //
+		        if (!localStorage.getItem('users')) {
+		            const defaultUsers = [
+		                {
+		                    id: 1,
+		                    username: 'admin',
+		                    password: 'admin123',
+		                    userType: 'admin',
+		                    registrationDate: new Date().toISOString(),
+		                    lastLogin: new Date().toISOString()
+		                }
+		            ];
+		            localStorage.setItem('users', JSON.stringify(defaultUsers));
+		        }
+		
+		        // ========== 第五步：检查登录状态 ========== //
+		        this.checkLoginStatus();
+		        
+		        console.log('用户系统初始化完成');
+		 
             
-            // 初始化默认邀请码
-            if (!localStorage.getItem('invitationCodes')) {
-                localStorage.setItem('invitationCodes', JSON.stringify([]));
-            }
+            
     
-            // 初始化默认管理员账户
-            if (!localStorage.getItem('users')) {
-                const defaultUsers = [
-                    {
-                        id: 1,
-                        username: 'admin',
-                        password: 'admin123',
-                        userType: 'admin',
-                        registrationDate: new Date().toISOString(),
-                        lastLogin: new Date().toISOString()
-                    }
-                ];
-                localStorage.setItem('users', JSON.stringify(defaultUsers));
-            }
-    
-            // 检查当前登录状态
-            this.checkLoginStatus();
+        
             
             // 新增：清理所有用户的过期限制
             this.cleanupExpiredRestrictions();
@@ -1204,6 +1525,12 @@ const UserSystem = {
     checkLoginStatus: function() {
         const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
         if (currentUser) {
+			 // ========== 新增：验证指纹 ========== //
+			        const fingerprintValid = FingerprintManager.verifyConsistency(currentUser.username);
+			        if (!fingerprintValid) {
+			            console.warn(`用户 ${currentUser.username} 指纹验证失败`);
+			            // 可以显示警告，但不强制退出
+			        }
             // 检查并清理过期的限制
             StorageManager.isRestricted(currentUser.username); // 这会自动清理过期的限制
             this.updateUI(currentUser);
@@ -1353,7 +1680,7 @@ const UserSystem = {
         document.getElementById('registerModal').style.display = 'none';
     },
 
-    // 登录
+ // 登录
     login: function() {
         const username = document.getElementById('loginUsername').value.trim();
         const password = document.getElementById('loginPassword').value.trim();
@@ -1373,7 +1700,16 @@ const UserSystem = {
         } else {
             this.hideError('loginPasswordError');
         }
-
+		
+		
+		if (user) {
+		 // ========== 新增：验证指纹一致性 ========== //
+		        const fingerprintValid = FingerprintManager.verifyConsistency(username);
+		        if (!fingerprintValid) {
+		            alert('检测到浏览器环境异常，请勿频繁清除数据！');}
+  // ========== 新增：存储用户指纹关联 ========== //
+        FingerprintManager.storeUserFingerprint(username);
+        
         if (!isValid) return;
 
         // 获取用户数据
@@ -1406,15 +1742,17 @@ const UserSystem = {
             alert(`欢迎回来，${user.username}！`);
         } else {
             this.showError('loginPasswordError', '用户名或密码错误');
-        }
+     }
+		}
     },
 
     // 注册
     register: function() {
-        const username = document.getElementById('registerUsername').value.trim();
-        const password = document.getElementById('registerPassword').value.trim();
-        const confirmPassword = document.getElementById('registerConfirmPassword').value.trim();
-        const invitationCode = document.getElementById('invitationCode').value.trim();
+        
+            const username = document.getElementById('registerUsername').value.trim();
+            const password = document.getElementById('registerPassword').value.trim();
+            const confirmPassword = document.getElementById('registerConfirmPassword').value.trim();
+            const invitationCode = document.getElementById('invitationCode').value.trim();
 
         // 验证输入
         let isValid = true;
@@ -1447,7 +1785,12 @@ const UserSystem = {
         }
 
         if (!isValid) return;
-
+ if (newUser) {
+        // ========== 新增：存储用户指纹关联 ========== //
+        FingerprintManager.storeUserFingerprint(username);
+        
+        // ... 原有的注册逻辑 ...
+    }
         // 检查用户名是否已存在
         const users = JSON.parse(localStorage.getItem('users') || '[]');
         if (users.find(u => u.username === username)) {
@@ -1519,7 +1862,13 @@ const UserSystem = {
 
     // 检查试用用户是否可以保存记录
      canSaveRecord: function(username) {
-            // 1. 检查是否被限制
+            // ========== 新增：检查指纹异常 ========== //
+                const fingerprintValid = FingerprintManager.verifyConsistency(username);
+                if (!fingerprintValid) {
+                    console.warn(`用户 ${username} 指纹验证失败，限制保存`);
+                    return false;
+                }
+			// 1. 检查是否被限制
             const restriction = StorageManager.isRestricted(username);
             if (restriction.restricted) {
                 console.warn(`用户 ${username} 处于限制期，不能保存记录`);
@@ -2039,32 +2388,99 @@ processImportedFile: function(content, fileName = '') {
 
 };
 
-// 初始化盘口和水位选项
-document.addEventListener('DOMContentLoaded', function() {
-    // 初始化用户系统
-    UserSystem.init();
+// ============== 盘口类型切换功能 ============== //
+function initHandicapTabs() {
+    console.log('初始化盘口类型切换...');
+    
+    const tabs = document.querySelectorAll('.handicap-tab');
+    const contents = document.querySelectorAll('.handicap-content');
+    
+    tabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+            const tabType = this.getAttribute('data-tab');
+            
+            // 移除所有active类
+            tabs.forEach(t => t.classList.remove('active'));
+            contents.forEach(c => c.classList.remove('active'));
+            
+            // 添加active类到当前标签和内容
+            this.classList.add('active');
+            document.getElementById(`${tabType}-content`).classList.add('active');
+            
+            console.log(`切换到盘口类型: ${tabType}`);
+        });
+    });
+}
 
-    // 初始化盘口选项（0-3，递增0.25）
-    const initialHandicapSelect = document.getElementById('initial-handicap');
-    const currentHandicapSelect = document.getElementById('current-handicap');
+function initHandicapOptions() {
+    console.log('初始化盘口和水位选项...');
+    
+    // 初始化让球盘盘口选项（0-3，递增0.25）
+    const asianInitialHandicapSelect = document.getElementById('asian-initial-handicap');
+    const asianCurrentHandicapSelect = document.getElementById('asian-current-handicap');
 
-    // 优化：减少选项数量，使用更友好的显示
-    const handicapOptions = [0, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75, 3];
-    handicapOptions.forEach(value => {
+    // 清空现有选项
+    asianInitialHandicapSelect.innerHTML = '<option value="">请选择</option>';
+    asianCurrentHandicapSelect.innerHTML = '<option value="">请选择</option>';
+
+    // 让球盘盘口选项（0-3，递增0.25）
+    const asianHandicapOptions = [0, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75, 3];
+    asianHandicapOptions.forEach(value => {
         const option1 = document.createElement('option');
         option1.value = value.toFixed(2);
         option1.textContent = value.toFixed(2);
-        initialHandicapSelect.appendChild(option1);
+        asianInitialHandicapSelect.appendChild(option1);
 
         const option2 = document.createElement('option');
         option2.value = value.toFixed(2);
         option2.textContent = value.toFixed(2);
-        currentHandicapSelect.appendChild(option2.cloneNode(true));
+        asianCurrentHandicapSelect.appendChild(option2.cloneNode(true));
     });
 
+    console.log(`让球盘盘口选项初始化完成，共 ${asianHandicapOptions.length} 个选项`);
+    
+    // 初始化大小盘盘口选项（1.5-4，递增0.25）
+    const sizeInitialHandicapSelect = document.getElementById('size-initial-handicap');
+    const sizeCurrentHandicapSelect = document.getElementById('size-current-handicap');
+
+    // 清空现有选项
+    sizeInitialHandicapSelect.innerHTML = '<option value="">请选择</option>';
+    sizeCurrentHandicapSelect.innerHTML = '<option value="">请选择</option>';
+
+    // 大小盘盘口选项（1.5-4，递增0.25）
+    const sizeHandicapOptions = [];
+    for (let i = 1.5; i <= 4; i += 0.25) {
+        sizeHandicapOptions.push(i);
+    }
+    sizeHandicapOptions.forEach(value => {
+        const option1 = document.createElement('option');
+        option1.value = value.toFixed(2);
+        option1.textContent = value.toFixed(2);
+        sizeInitialHandicapSelect.appendChild(option1);
+
+        const option2 = document.createElement('option');
+        option2.value = value.toFixed(2);
+        option2.textContent = value.toFixed(2);
+        sizeCurrentHandicapSelect.appendChild(option2.cloneNode(true));
+    });
+
+    console.log(`大小盘盘口选项初始化完成，共 ${sizeHandicapOptions.length} 个选项`);
+}
+
+function initWaterOptions() {
+    console.log('初始化水位选项...');
+    
     // 初始化水位选项（0.7-1.2，递增0.01）
-    const initialWaterSelect = document.getElementById('initial-water');
-    const currentWaterSelect = document.getElementById('current-water');
+    const asianInitialWaterSelect = document.getElementById('asian-initial-water');
+    const asianCurrentWaterSelect = document.getElementById('asian-current-water');
+    const sizeInitialWaterSelect = document.getElementById('size-initial-water');
+    const sizeCurrentWaterSelect = document.getElementById('size-current-water');
+
+    // 清空现有选项
+    asianInitialWaterSelect.innerHTML = '<option value="">请选择</option>';
+    asianCurrentWaterSelect.innerHTML = '<option value="">请选择</option>';
+    sizeInitialWaterSelect.innerHTML = '<option value="">请选择</option>';
+    sizeCurrentWaterSelect.innerHTML = '<option value="">请选择</option>';
 
     // 优化：减少选项数量，只显示常用水位
     const waterOptions = [];
@@ -2075,39 +2491,27 @@ document.addEventListener('DOMContentLoaded', function() {
         const option1 = document.createElement('option');
         option1.value = value.toFixed(2);
         option1.textContent = value.toFixed(2);
-        initialWaterSelect.appendChild(option1);
+        asianInitialWaterSelect.appendChild(option1);
 
         const option2 = document.createElement('option');
         option2.value = value.toFixed(2);
         option2.textContent = value.toFixed(2);
-        currentWaterSelect.appendChild(option2.cloneNode(true));
+        asianCurrentWaterSelect.appendChild(option2.cloneNode(true));
+        
+        const option3 = document.createElement('option');
+        option3.value = value.toFixed(2);
+        option3.textContent = value.toFixed(2);
+        sizeInitialWaterSelect.appendChild(option3.cloneNode(true));
+        
+        const option4 = document.createElement('option');
+        option4.value = value.toFixed(2);
+        option4.textContent = value.toFixed(2);
+        sizeCurrentWaterSelect.appendChild(option4.cloneNode(true));
     });
 
-    // 加载历史记录
-    loadHistory();
+    console.log(`水位选项初始化完成，共 ${waterOptions.length} 个选项`);
+}
 
-    // 初始化图表
-    initChart();
-
-    // 绑定事件
-    document.getElementById('save-btn').addEventListener('click', saveRecord);
-    document.getElementById('reset-btn').addEventListener('click', resetForm);
-    document.getElementById('toggle-history').addEventListener('click', toggleHistory);
-    document.getElementById('clear-history').addEventListener('click', clearHistory);
-
-    // 绑定模态框事件
-    document.getElementById('loginBtn').addEventListener('click', () => UserSystem.login());
-    document.getElementById('cancelLoginBtn').addEventListener('click', () => UserSystem.hideAllModals());
-    document.getElementById('registerBtn').addEventListener('click', () => UserSystem.register());
-    document.getElementById('cancelRegisterBtn').addEventListener('click', () => UserSystem.hideAllModals());
-    document.getElementById('showRegisterLink').addEventListener('click', () => {
-        UserSystem.hideAllModals();
-        UserSystem.showRegisterModal();
-    });
-    document.getElementById('showLoginLink').addEventListener('click', () => {
-        UserSystem.hideAllModals();
-        UserSystem.showLoginModal();
-    });   
 // ============== 添加邀请码功能事件绑定 ============== //
 
 // 绑定文件导入按钮
@@ -2131,58 +2535,81 @@ if (fileImportBtn) {
     console.error('未找到文件导入按钮');
 }
 
-// 绑定手动输入按钮
-const manualImportBtn = document.getElementById('manualImportBtn');
-if (manualImportBtn) {
-    console.log('找到手动输入按钮');
-    manualImportBtn.addEventListener('click', function(e) {
-        console.log('手动输入按钮被点击');
-        e.preventDefault();
-        e.stopPropagation();
-        
-        try {
-            UserSystem.importManually();
-        } catch (err) {
-            console.error('手动输入失败:', err);
-            alert('手动输入失败: ' + err.message);
-        }
-    });
-} else {
-    console.error('未找到手动输入按钮');
-}
-
-// 绑定刷新邀请码列表按钮
-const refreshBtn = document.getElementById('refreshInviteListBtn');
-if (refreshBtn) {
-    console.log('找到刷新按钮');
-    refreshBtn.addEventListener('click', function(e) {
-        console.log('刷新按钮被点击');
-        e.preventDefault();
-        e.stopPropagation();
-        
-        try {
-            UserSystem.refreshInvitationCodeList();
-            alert('邀请码列表已刷新');
-        } catch (err) {
-            console.error('刷新失败:', err);
-            alert('刷新失败: ' + err.message);
-        }
-    });
-} else {
-    console.error('未找到刷新按钮');
-}
-
-// ============== 事件绑定结束 ============== //
+function initEventListeners() {
+    console.log('初始化事件监听器...');
     
+    // 绑定表单按钮事件
+    document.getElementById('save-asian-btn').addEventListener('click', saveAsianRecord);
+    document.getElementById('reset-asian-btn').addEventListener('click', resetAsianForm);
+    document.getElementById('save-size-btn').addEventListener('click', saveSizeRecord);
+    document.getElementById('reset-size-btn').addEventListener('click', resetSizeForm);
+    document.getElementById('toggle-history').addEventListener('click', toggleHistory);
+    document.getElementById('clear-history').addEventListener('click', clearHistory);
 
+    // 绑定模态框事件
+    document.getElementById('loginBtn').addEventListener('click', () => UserSystem.login());
+    document.getElementById('cancelLoginBtn').addEventListener('click', () => UserSystem.hideAllModals());
+    document.getElementById('registerBtn').addEventListener('click', () => UserSystem.register());
+    document.getElementById('cancelRegisterBtn').addEventListener('click', () => UserSystem.hideAllModals());
+    document.getElementById('showRegisterLink').addEventListener('click', () => {
+        UserSystem.hideAllModals();
+        UserSystem.showRegisterModal();
+    });
+    document.getElementById('showLoginLink').addEventListener('click', () => {
+        UserSystem.hideAllModals();
+        UserSystem.showLoginModal();
+    });
+    
+    // 为让球盘所有输入框添加change事件，用于自动计算推荐结果
+    document.getElementById('asian-initial-handicap').addEventListener('change', autoCalculateAsianRecommendation);
+    document.getElementById('asian-current-handicap').addEventListener('change', autoCalculateAsianRecommendation);
+    document.getElementById('asian-initial-water').addEventListener('change', autoCalculateAsianRecommendation);
+    document.getElementById('asian-current-water').addEventListener('change', autoCalculateAsianRecommendation);
+    document.getElementById('asian-historical-record').addEventListener('change', autoCalculateAsianRecommendation);
+    
+    // 为大小盘所有输入框添加change事件，用于自动计算推荐结果
+    document.getElementById('size-initial-handicap').addEventListener('change', autoCalculateSizeRecommendation);
+    document.getElementById('size-current-handicap').addEventListener('change', autoCalculateSizeRecommendation);
+    document.getElementById('size-initial-water').addEventListener('change', autoCalculateSizeRecommendation);
+    document.getElementById('size-current-water').addEventListener('change', autoCalculateSizeRecommendation);
+    document.getElementById('size-historical-record').addEventListener('change', autoCalculateSizeRecommendation);
 
-    // 为所有输入框添加change事件，用于自动计算推荐结果
-    document.getElementById('initial-handicap').addEventListener('change', autoCalculateRecommendation);
-    document.getElementById('current-handicap').addEventListener('change', autoCalculateRecommendation);
-    document.getElementById('initial-water').addEventListener('change', autoCalculateRecommendation);
-    document.getElementById('current-water').addEventListener('change', autoCalculateRecommendation);
-    document.getElementById('historical-record').addEventListener('change', autoCalculateRecommendation);
+    console.log('事件监听器初始化完成');
+}
 
+// 主初始化函数
+function initializeApplication() {
+    console.log('=== 开始应用程序初始化 ===');
+    
+    // 第一步：初始化用户系统（包含指纹）
+    UserSystem.init();
+    
+    // 第二步：初始化盘口类型切换
+    initHandicapTabs();
+    
+    // 第三步：初始化盘口和水位选项
+    initHandicapOptions();
+    initWaterOptions();
+    
+    // 第四步：加载历史记录
+    loadHistory();
+    
+    // 第五步：初始化图表
+    initChart();
+    
+    // 第六步：初始化事件监听器
+    initEventListeners();
+    
+    // 第七步：移动端优化
+    initMobileOptimization();
+    
+    console.log('=== 应用程序初始化完成 ===');
+}
+
+// 移动端优化
+function initMobileOptimization() {
+    console.log('初始化移动端优化...');
+    
     // 移动端优化：防止点击时出现蓝色高亮
     document.querySelectorAll('button, select').forEach(element => {
         element.addEventListener('touchstart', function() {
@@ -2192,37 +2619,129 @@ if (refreshBtn) {
             this.style.transform = '';
         });
     });
+	// 移动端优化：防止双击缩放
+	    let lastTouchEnd = 0;
+	    document.addEventListener('touchend', function(event) {
+	        const now = Date.now();
+	        if (now - lastTouchEnd <= 300) {
+	            event.preventDefault();
+	        }
+	        lastTouchEnd = now;
+	    }, false);
+	    
+	    console.log('移动端优化完成');
+	}
+
+// ============== 页面加载入口 ============== //
+// DOM加载完成后开始初始化
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM内容加载完成，开始初始化应用程序...');
+    
+    // 调用主初始化函数
+    initializeApplication();
+    
+    // 延迟执行邀请码按钮绑定（确保DOM完全就绪）
+    setTimeout(function() {
+        bindInvitationCodeButtons();
+    }, 100);
 });
 
-// 自动计算推荐结果
-function autoCalculateRecommendation() {
-    const initialHandicap = parseFloat(document.getElementById('initial-handicap').value);
-    const currentHandicap = parseFloat(document.getElementById('current-handicap').value);
-    const initialWater = parseFloat(document.getElementById('initial-water').value);
-    const currentWater = parseFloat(document.getElementById('current-water').value);
-    const historicalRecord = document.getElementById('historical-record').value;
+// 邀请码功能事件绑定
+function bindInvitationCodeButtons() {
+    console.log('绑定邀请码按钮事件...');
+    
+    // 绑定文件导入按钮
+    const fileImportBtn = document.getElementById('fileImportBtn');
+    if (fileImportBtn) {
+        console.log('找到文件导入按钮');
+        fileImportBtn.addEventListener('click', function(e) {
+            console.log('文件导入按钮被点击');
+            e.preventDefault();
+            e.stopPropagation();
+            
+            try {
+                UserSystem.importViaFileInput();
+            } catch (err) {
+                console.error('导入失败:', err);
+                alert('导入失败: ' + err.message);
+            }
+        });
+    } else {
+        console.error('未找到文件导入按钮');
+    }
+
+    // 绑定手动输入按钮
+    const manualImportBtn = document.getElementById('manualImportBtn');
+    if (manualImportBtn) {
+        console.log('找到手动输入按钮');
+        manualImportBtn.addEventListener('click', function(e) {
+            console.log('手动输入按钮被点击');
+            e.preventDefault();
+            e.stopPropagation();
+            
+            try {
+                UserSystem.importManually();
+            } catch (err) {
+                console.error('手动输入失败:', err);
+                alert('手动输入失败: ' + err.message);
+            }
+        });
+    } else {
+        console.error('未找到手动输入按钮');
+    }
+
+    // 绑定刷新邀请码列表按钮
+    const refreshBtn = document.getElementById('refreshInviteListBtn');
+    if (refreshBtn) {
+        console.log('找到刷新按钮');
+        refreshBtn.addEventListener('click', function(e) {
+            console.log('刷新按钮被点击');
+            e.preventDefault();
+            e.stopPropagation();
+            
+            try {
+                UserSystem.refreshInvitationCodeList();
+                alert('邀请码列表已刷新');
+            } catch (err) {
+                console.error('刷新失败:', err);
+                alert('刷新失败: ' + err.message);
+            }
+        });
+    } else {
+        console.error('未找到刷新按钮');
+    }
+    
+    console.log('邀请码按钮事件绑定完成');
+}
+
+// ============== 让球盘计算函数 ============== //
+function autoCalculateAsianRecommendation() {
+    const initialHandicap = parseFloat(document.getElementById('asian-initial-handicap').value);
+    const currentHandicap = parseFloat(document.getElementById('asian-current-handicap').value);
+    const initialWater = parseFloat(document.getElementById('asian-initial-water').value);
+    const currentWater = parseFloat(document.getElementById('asian-current-water').value);
+    const historicalRecord = document.getElementById('asian-historical-record').value;
 
     // 如果所有字段都有值，则计算推荐结果
     if (!isNaN(initialHandicap) && !isNaN(currentHandicap) &&
         !isNaN(initialWater) && !isNaN(currentWater) &&
         historicalRecord) {
-        calculateRecommendation();
+        calculateAsianRecommendation();
     } else {
         // 否则显示等待输入
-        const resultElement = document.getElementById('recommendation-result');
+        const resultElement = document.getElementById('asian-recommendation-result');
         resultElement.textContent = "等待输入";
         resultElement.className = "recommendation-result recommendation-neutral";
-        document.getElementById('recommendation-details').textContent = "请填写所有字段以获取推荐结果";
+        document.getElementById('asian-recommendation-details').textContent = "请填写所有字段以获取推荐结果";
     }
 }
 
-// 计算推荐结果
-function calculateRecommendation() {
-    const initialHandicap = parseFloat(document.getElementById('initial-handicap').value);
-    const currentHandicap = parseFloat(document.getElementById('current-handicap').value);
-    const initialWater = parseFloat(document.getElementById('initial-water').value);
-    const currentWater = parseFloat(document.getElementById('current-water').value);
-    const historicalRecord = document.getElementById('historical-record').value;
+function calculateAsianRecommendation() {
+    const initialHandicap = parseFloat(document.getElementById('asian-initial-handicap').value);
+    const currentHandicap = parseFloat(document.getElementById('asian-current-handicap').value);
+    const initialWater = parseFloat(document.getElementById('asian-initial-water').value);
+    const currentWater = parseFloat(document.getElementById('asian-current-water').value);
+    const historicalRecord = document.getElementById('asian-historical-record').value;
 
     // 验证输入
     if (isNaN(initialHandicap) || isNaN(currentHandicap) ||
@@ -2283,7 +2802,7 @@ function calculateRecommendation() {
     }
 
     // 显示推荐结果
-    const resultElement = document.getElementById('recommendation-result');
+    const resultElement = document.getElementById('asian-recommendation-result');
     resultElement.textContent = recommendation;
     if (recommendation === "上盘") {
         resultElement.className = "recommendation-result recommendation-up";
@@ -2300,12 +2819,122 @@ function calculateRecommendation() {
         waterChange < 0 ? `水位下降 ${Math.abs(waterChange.toFixed(2))}` : "水位无变化";
     const historicalText = historicalRecord === "win" ? "历史战绩: 赢" : "历史战绩: 输";
 
-    document.getElementById('recommendation-details').textContent =
+    document.getElementById('asian-recommendation-details').textContent =
         `${handicapChangeText} | ${waterChangeText} | ${historicalText}`;
 }
 
-// 保存记录到历史
-function saveRecord() {
+// ============== 大小盘计算函数 ============== //
+function autoCalculateSizeRecommendation() {
+    const initialHandicap = parseFloat(document.getElementById('size-initial-handicap').value);
+    const currentHandicap = parseFloat(document.getElementById('size-current-handicap').value);
+    const initialWater = parseFloat(document.getElementById('size-initial-water').value);
+    const currentWater = parseFloat(document.getElementById('size-current-water').value);
+    const historicalRecord = document.getElementById('size-historical-record').value;
+
+    // 如果所有字段都有值，则计算推荐结果
+    if (!isNaN(initialHandicap) && !isNaN(currentHandicap) &&
+        !isNaN(initialWater) && !isNaN(currentWater) &&
+        historicalRecord) {
+        calculateSizeRecommendation();
+    } else {
+        // 否则显示等待输入
+        const resultElement = document.getElementById('size-recommendation-result');
+        resultElement.textContent = "等待输入";
+        resultElement.className = "recommendation-result size-recommendation-neutral";
+        document.getElementById('size-recommendation-details').textContent = "请填写所有字段以获取推荐结果";
+    }
+}
+
+function calculateSizeRecommendation() {
+    const initialHandicap = parseFloat(document.getElementById('size-initial-handicap').value);
+    const currentHandicap = parseFloat(document.getElementById('size-current-handicap').value);
+    const initialWater = parseFloat(document.getElementById('size-initial-water').value);
+    const currentWater = parseFloat(document.getElementById('size-current-water').value);
+    const historicalRecord = document.getElementById('size-historical-record').value;
+
+    // 验证输入
+    if (isNaN(initialHandicap) || isNaN(currentHandicap) ||
+        isNaN(initialWater) || isNaN(currentWater) ||
+        !historicalRecord) {
+        return;
+    }
+
+    // 计算盘口和水位变化
+    const handicapChange = currentHandicap - initialHandicap;
+    const waterChange = currentWater - initialWater;
+
+    // 确定盘口变化方向
+    const handicapUp = handicapChange > 0;
+    const handicapDown = handicapChange < 0;
+
+    // 确定水位变化方向
+    const waterUp = waterChange > 0;
+    const waterDown = waterChange < 0;
+
+    let recommendation = "";
+
+    // 根据规则计算推荐结果（与让球盘相同规则，但输出不同）
+    // 规则1: 盘口升，水位升，历史战绩赢 -> 小球
+    if (handicapUp && waterUp && historicalRecord === "win") {
+        recommendation = "小球";
+    }
+    // 规则2: 盘口升，水位升，历史战绩输 -> 大球
+    else if (handicapUp && waterUp && historicalRecord === "loss") {
+        recommendation = "大球";
+    }
+    // 规则3: 盘口降，水位升，历史战绩输 -> 小球
+    else if (handicapDown && waterUp && historicalRecord === "loss") {
+        recommendation = "小球";
+    }
+    // 规则4: 盘口降，水位升，历史战绩赢 -> 大球
+    else if (handicapDown && waterUp && historicalRecord === "win") {
+        recommendation = "大球";
+    }
+    // 规则5: 盘口升，水位降，历史战绩输 -> 小球
+    else if (handicapUp && waterDown && historicalRecord === "loss") {
+        recommendation = "小球";
+    }
+    // 规则6: 盘口升，水位降，历史战绩赢 -> 大球
+    else if (handicapUp && waterDown && historicalRecord === "win") {
+        recommendation = "大球";
+    }
+    // 规则7: 盘口降，水位降，历史战绩输 -> 大球
+    else if (handicapDown && waterDown && historicalRecord === "loss") {
+        recommendation = "大球";
+    }
+    // 规则8: 盘口降，水位降，历史战绩赢 -> 小球
+    else if (handicapDown && waterDown && historicalRecord === "win") {
+        recommendation = "小球";
+    } else {
+        // 如果没有匹配的规则（例如盘口或水位无变化）
+        recommendation = "无明确推荐";
+    }
+
+    // 显示推荐结果
+    const resultElement = document.getElementById('size-recommendation-result');
+    resultElement.textContent = recommendation;
+    if (recommendation === "大球") {
+        resultElement.className = "recommendation-result size-recommendation-up";
+    } else if (recommendation === "小球") {
+        resultElement.className = "recommendation-result size-recommendation-down";
+    } else {
+        resultElement.className = "recommendation-result size-recommendation-neutral";
+    }
+
+    // 显示变化详情
+    const handicapChangeText = handicapChange > 0 ? `大小盘上升 ${Math.abs(handicapChange)}` :
+        handicapChange < 0 ? `大小盘下降 ${Math.abs(handicapChange)}` : "大小盘无变化";
+    const waterChangeText = waterChange > 0 ? `水位上升 ${Math.abs(waterChange.toFixed(2))}` :
+        waterChange < 0 ? `水位下降 ${Math.abs(waterChange.toFixed(2))}` : "水位无变化";
+    const historicalText = historicalRecord === "win" ? "历史战绩: 赢" : "历史战绩: 输";
+
+    document.getElementById('size-recommendation-details').textContent =
+        `${handicapChangeText} | ${waterChangeText} | ${historicalText}`;
+}
+
+// ============== 保存记录功能 ============== //
+// 保存让球盘记录
+function saveAsianRecord() {
     // 检查用户登录状态
     const currentUser = JSON.parse(localStorage.getItem('currentUser'));
     let username = 'guest';
@@ -2342,13 +2971,13 @@ function saveRecord() {
         }
     }
 
-    // 原有数据验证代码保持不变...
-    const initialHandicap = document.getElementById('initial-handicap').value;
-    const currentHandicap = document.getElementById('current-handicap').value;
-    const initialWater = document.getElementById('initial-water').value;
-    const currentWater = document.getElementById('current-water').value;
-    const historicalRecord = document.getElementById('historical-record').value;
-    const recommendationResult = document.getElementById('recommendation-result').textContent;
+    // 验证数据
+    const initialHandicap = document.getElementById('asian-initial-handicap').value;
+    const currentHandicap = document.getElementById('asian-current-handicap').value;
+    const initialWater = document.getElementById('asian-initial-water').value;
+    const currentWater = document.getElementById('asian-current-water').value;
+    const historicalRecord = document.getElementById('asian-historical-record').value;
+    const recommendationResult = document.getElementById('asian-recommendation-result').textContent;
 
     // 验证数据
     if (!initialHandicap || !currentHandicap || !initialWater || !currentWater || !historicalRecord ||
@@ -2367,6 +2996,7 @@ function saveRecord() {
     // 创建记录对象
     const record = {
         id: Date.now(), // 使用时间戳作为ID
+        handicapType: 'asian', // 盘口类型：asian=让球盘
         userId: userId,
         username: username,
         initialHandicap: initialHandicap,
@@ -2408,7 +3038,7 @@ function saveRecord() {
     loadHistory();
 
     // 显示成功消息，包含试用信息
-    let successMsg = '记录已保存！';
+    let successMsg = '让球盘记录已保存！';
     if (!currentUser || userType === 'trial') {
         const trialData = StorageManager.getTrialData(username);
         const usedCount = trialData ? trialData.count : 0;
@@ -2425,6 +3055,130 @@ function saveRecord() {
     
     alert(successMsg);
 }
+
+// 保存大小盘记录
+function saveSizeRecord() {
+    // 检查用户登录状态
+    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+    let username = 'guest';
+    let userType = 'trial';
+    
+    if (currentUser) {
+        username = currentUser.username;
+        userType = currentUser.userType;
+    } else {
+        // 为游客生成唯一标识（基于时间戳）
+        username = 'guest_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 5);
+    }
+    
+    // 如果是试用用户或游客，进行更严格的检查
+    if (!currentUser || userType === 'trial') {
+        // 1. 检查试用次数
+        const canSave = UserSystem.canSaveRecord(username);
+        if (!canSave) {
+            let message = '试用次数已用完（最多18次）。';
+            
+            // 检查具体原因
+            const isExpired = StorageManager.isTrialExpired(username);
+            const restriction = StorageManager.isRestricted(username);
+            
+            if (isExpired) {
+                message = '试用期已过期（7天）。';
+            } else if (restriction.restricted) {
+                message = `账号受限：${restriction.reason}，剩余 ${restriction.hoursLeft} 小时`;
+            }
+            
+            alert(message + ' 请注册成为会员继续使用！');
+            UserSystem.showRegisterModal();
+            return;
+        }
+    }
+
+    // 验证数据
+    const initialHandicap = document.getElementById('size-initial-handicap').value;
+    const currentHandicap = document.getElementById('size-current-handicap').value;
+    const initialWater = document.getElementById('size-initial-water').value;
+    const currentWater = document.getElementById('size-current-water').value;
+    const historicalRecord = document.getElementById('size-historical-record').value;
+    const recommendationResult = document.getElementById('size-recommendation-result').textContent;
+
+    // 验证数据
+    if (!initialHandicap || !currentHandicap || !initialWater || !currentWater || !historicalRecord ||
+        recommendationResult === "等待输入" || recommendationResult === "无明确推荐") {
+        alert('请先填写所有字段并获取推荐结果！');
+        return;
+    }
+
+    // 确定用户ID
+    let userId = 'guest';
+    if (currentUser) {
+        userId = currentUser.id;
+        username = currentUser.username;
+    }
+
+    // 创建记录对象
+    const record = {
+        id: Date.now(), // 使用时间戳作为ID
+        handicapType: 'size', // 盘口类型：size=大小盘
+        userId: userId,
+        username: username,
+        initialHandicap: initialHandicap,
+        currentHandicap: currentHandicap,
+        initialWater: initialWater,
+        currentWater: currentWater,
+        handicapChange: (parseFloat(currentHandicap) - parseFloat(initialHandicap)).toFixed(2),
+        waterChange: (parseFloat(currentWater) - parseFloat(initialWater)).toFixed(2),
+        historicalRecord: historicalRecord,
+        recommendation: recommendationResult,
+        actualResult: "", // 实际结果为空，用户可以后续编辑
+        timestamp: new Date().toLocaleString()
+    };
+
+    // 从localStorage获取现有记录
+    let history = JSON.parse(localStorage.getItem('football-handicap-history') || '[]');
+
+    // 添加新记录
+    history.push(record);
+
+    // 保存到localStorage
+    localStorage.setItem('football-handicap-history', JSON.stringify(history));
+
+    // 如果是试用用户，增加记录次数
+    if (!currentUser || userType === 'trial') {
+        const success = UserSystem.incrementTrialRecord(username);
+        if (!success) {
+            alert('保存失败：试用次数已达上限或试用期已过期！');
+            
+            // 如果保存失败，移除刚添加的记录
+            history = history.filter(r => r.id !== record.id);
+            localStorage.setItem('football-handicap-history', JSON.stringify(history));
+            
+            return;
+        }
+    }
+
+    // 重新加载历史记录
+    loadHistory();
+
+    // 显示成功消息，包含试用信息
+    let successMsg = '大小盘记录已保存！';
+    if (!currentUser || userType === 'trial') {
+        const trialData = StorageManager.getTrialData(username);
+        const usedCount = trialData ? trialData.count : 0;
+        const remaining = 18 - usedCount;
+        const remainingDays = StorageManager.getRemainingTrialDays(username);
+        
+        successMsg += `\n\n试用信息：`;
+        successMsg += `\n已使用次数：${usedCount}/18`;
+        successMsg += `\n剩余次数：${remaining}`;
+        if (remainingDays < 7) {
+            successMsg += `\n试用期剩余：${remainingDays}天`;
+        }
+    }
+    
+    alert(successMsg);
+}
+
 // 加载历史记录（只显示当前用户的记录）
 function loadHistory() {
     const currentUser = JSON.parse(localStorage.getItem('currentUser'));
@@ -2434,7 +3188,7 @@ function loadHistory() {
     if (currentUser) {
         history = history.filter(record => record.userId === currentUser.id);
     } else {
-        history = history.filter(record => record.userId === 'guest');
+        history = history.filter(record => record.userId === 'guest' || record.userId.toString().includes('guest_'));
     }
 
     const tableBody = document.getElementById('history-table-body');
@@ -2444,7 +3198,7 @@ function loadHistory() {
     // 如果没有记录
     if (history.length === 0) {
         const row = document.createElement('tr');
-        row.innerHTML = `<td colspan="6" style="text-align: center; padding: 30px; font-size: 14px; color: #666;">暂无历史记录</td>`;
+        row.innerHTML = `<td colspan="7" style="text-align: center; padding: 30px; font-size: 14px; color: #666;">暂无历史记录</td>`;
         tableBody.appendChild(row);
         updateChartData();
         return;
@@ -2458,15 +3212,15 @@ function loadHistory() {
             parseFloat(record.handicapChange) < 0 ? 'status-down' : '';
         const waterChangeClass = parseFloat(record.waterChange) > 0 ? 'status-up' :
             parseFloat(record.waterChange) < 0 ? 'status-down' : '';
-
-        const handicapChangeText = parseFloat(record.handicapChange) > 0 ? `↑ ${record.handicapChange}` :
-            parseFloat(record.handicapChange) < 0 ? `↓ ${Math.abs(record.handicapChange)}` : '0';
-        const waterChangeText = parseFloat(record.waterChange) > 0 ? `↑ ${record.waterChange}` :
-            parseFloat(record.waterChange) < 0 ? `↓ ${Math.abs(record.waterChange)}` : '0';
+        
+        // 盘口类型显示
+        const handicapTypeText = record.handicapType === 'asian' ? '让球盘' : '大小盘';
+        const handicapTypeClass = record.handicapType === 'asian' ? 'status-up' : 'status-down';
 
         row.innerHTML = `
-            <td class="${handicapChangeClass}">${handicapChangeText}</td>
-            <td class="${waterChangeClass}">${waterChangeText}</td>
+            <td class="${handicapTypeClass}">${handicapTypeText}</td>
+            <td class="${handicapChangeClass}">${parseFloat(record.handicapChange) > 0 ? '↑ ' : parseFloat(record.handicapChange) < 0 ? '↓ ' : ''}${Math.abs(parseFloat(record.handicapChange)).toFixed(2)}</td>
+            <td class="${waterChangeClass}">${parseFloat(record.waterChange) > 0 ? '↑ ' : parseFloat(record.waterChange) < 0 ? '↓ ' : ''}${Math.abs(parseFloat(record.waterChange)).toFixed(2)}</td>
             <td>${record.historicalRecord === 'win' ? '赢' : '输'}</td>
             <td>${record.recommendation}</td>
             <td>
@@ -2533,14 +3287,39 @@ function editRecord(id) {
     let history = JSON.parse(localStorage.getItem('football-handicap-history') || '[]');
     const record = history.find(record => record.id == id);
     if (record) {
-        // 填充表单
-        document.getElementById('initial-handicap').value = record.initialHandicap;
-        document.getElementById('current-handicap').value = record.currentHandicap;
-        document.getElementById('initial-water').value = record.initialWater;
-        document.getElementById('current-water').value = record.currentWater;
-        document.getElementById('historical-record').value = record.historicalRecord;
-        // 自动计算推荐结果
-        autoCalculateRecommendation();
+        // 根据盘口类型切换到对应的标签页
+        if (record.handicapType === 'asian') {
+            // 切换到让球盘标签
+            document.querySelector('.handicap-tab[data-tab="asian-handicap"]').click();
+            
+            // 填充让球盘表单
+            document.getElementById('asian-initial-handicap').value = record.initialHandicap;
+            document.getElementById('asian-current-handicap').value = record.currentHandicap;
+            document.getElementById('asian-initial-water').value = record.initialWater;
+            document.getElementById('asian-current-water').value = record.currentWater;
+            document.getElementById('asian-historical-record').value = record.historicalRecord;
+            
+            // 自动计算推荐结果
+            setTimeout(() => {
+                autoCalculateAsianRecommendation();
+            }, 100);
+        } else if (record.handicapType === 'size') {
+            // 切换到大小盘标签
+            document.querySelector('.handicap-tab[data-tab="over-under"]').click();
+            
+            // 填充大小盘表单
+            document.getElementById('size-initial-handicap').value = record.initialHandicap;
+            document.getElementById('size-current-handicap').value = record.currentHandicap;
+            document.getElementById('size-initial-water').value = record.initialWater;
+            document.getElementById('size-current-water').value = record.currentWater;
+            document.getElementById('size-historical-record').value = record.historicalRecord;
+            
+            // 自动计算推荐结果
+            setTimeout(() => {
+                autoCalculateSizeRecommendation();
+            }, 100);
+        }
+        
         // 删除原记录
         deleteRecord(id, false);
         alert('记录已加载到表单中，可以修改后重新保存！');
@@ -2567,7 +3346,7 @@ function updateChartData() {
     if (currentUser) {
         history = history.filter(record => record.userId === currentUser.id);
     } else {
-        history = history.filter(record => record.userId === 'guest');
+        history = history.filter(record => record.userId === 'guest' || record.userId.toString().includes('guest_'));
     }
 
     // 如果没有记录，重置图表
@@ -2727,7 +3506,7 @@ function initChart() {
                 },
                 title: {
                     display: true,
-                    text: '胜率统计图表',
+                    text: '胜率统计图表（包含让球盘和大小盘）',
                     font: {
                         size: isMobile ? 14 : 16
                     },
@@ -2761,15 +3540,26 @@ function updateChart(data) {
 }
 
 // 重置表单
-function resetForm() {
-    document.getElementById('initial-handicap').value = '';
-    document.getElementById('current-handicap').value = '';
-    document.getElementById('initial-water').value = '';
-    document.getElementById('current-water').value = '';
-    document.getElementById('historical-record').value = '';
-    document.getElementById('recommendation-result').textContent = '等待输入';
-    document.getElementById('recommendation-result').className = 'recommendation-result recommendation-neutral';
-    document.getElementById('recommendation-details').textContent = '请填写所有字段以获取推荐结果';
+function resetAsianForm() {
+    document.getElementById('asian-initial-handicap').value = '';
+    document.getElementById('asian-current-handicap').value = '';
+    document.getElementById('asian-initial-water').value = '';
+    document.getElementById('asian-current-water').value = '';
+    document.getElementById('asian-historical-record').value = '';
+    document.getElementById('asian-recommendation-result').textContent = '等待输入';
+    document.getElementById('asian-recommendation-result').className = 'recommendation-result recommendation-neutral';
+    document.getElementById('asian-recommendation-details').textContent = '请填写所有字段以获取推荐结果';
+}
+
+function resetSizeForm() {
+    document.getElementById('size-initial-handicap').value = '';
+    document.getElementById('size-current-handicap').value = '';
+    document.getElementById('size-initial-water').value = '';
+    document.getElementById('size-current-water').value = '';
+    document.getElementById('size-historical-record').value = '';
+    document.getElementById('size-recommendation-result').textContent = '等待输入';
+    document.getElementById('size-recommendation-result').className = 'recommendation-result size-recommendation-neutral';
+    document.getElementById('size-recommendation-details').textContent = '请填写所有字段以获取推荐结果';
 }
 
 // 切换历史记录显示/隐藏
@@ -2794,22 +3584,12 @@ function clearHistory() {
         history = history.filter(record => record.userId !== currentUser.id);
     } else {
         // 清空游客记录
-        history = history.filter(record => record.userId !== 'guest');
+        history = history.filter(record => record.userId !== 'guest' && !record.userId.toString().includes('guest_'));
     }
     localStorage.setItem('football-handicap-history', JSON.stringify(history));
     loadHistory();
     alert('历史记录已清空！');
 }
-
-// 移动端优化：防止双击缩放
-let lastTouchEnd = 0;
-document.addEventListener('touchend', function(event) {
-    const now = Date.now();
-    if (now - lastTouchEnd <= 300) {
-        event.preventDefault();
-    }
-    lastTouchEnd = now;
-}, false);
 </script>
 </body>
 </html>
