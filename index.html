@@ -1022,6 +1022,37 @@
     </div>
 
     <script>
+
+        // ============== API 配置 ============== //
+const API_CONFIG = {
+    // 生产环境：使用Vercel部署的地址
+    // 开发环境：可以设置为本地地址
+    BASE_URL: window.location.hostname === 'localhost' 
+        ? 'http://localhost:3000/api' 
+        : 'https://footballdream.vercel.app/api',
+    
+    // API端点
+    ENDPOINTS: {
+        RECOMMENDATION: '/recommendation',
+        SAVE_RECORD: '/save-record',
+        GET_HISTORY: '/get-history',
+        UPDATE_RESULT: '/update-result',
+        DELETE_RECORD: '/delete-record',
+        LOGIN: '/login',
+        REGISTER: '/register',
+        CHECK_TRIAL: '/check-trial'
+    },
+    
+    // 请求配置
+    REQUEST_TIMEOUT: 10000, // 10秒超时
+    RETRY_ATTEMPTS: 2, // 重试次数
+    CACHE_DURATION: 60000 // 缓存时间（1分钟）
+};
+
+// 获取完整的API URL
+function getApiUrl(endpoint) {
+    return API_CONFIG.BASE_URL + API_CONFIG.ENDPOINTS[endpoint];
+}
         // 页面加载完成后的额外调试
         window.addEventListener('load', function() {
             console.log('页面完全加载完成');
@@ -1613,6 +1644,7 @@
                 return fingerprint;
             }
         };
+        
         // 用户管理系统
         const UserSystem = {
             // 初始化用户数据
@@ -2886,92 +2918,91 @@
             }
         }
 
-        function calculateAsianRecommendation() {
-            const initialHandicap = parseFloat(document.getElementById('asian-initial-handicap').value);
-            const currentHandicap = parseFloat(document.getElementById('asian-current-handicap').value);
-            const initialWater = parseFloat(document.getElementById('asian-initial-water').value);
-            const currentWater = parseFloat(document.getElementById('asian-current-water').value);
-            const historicalRecord = document.getElementById('asian-historical-record').value;
+// ============== 让球盘计算函数 ============== //
+async function calculateAsianRecommendation() {
+  const initialHandicap = parseFloat(document.getElementById('asian-initial-handicap').value);
+  const currentHandicap = parseFloat(document.getElementById('asian-current-handicap').value);
+  const initialWater = parseFloat(document.getElementById('asian-initial-water').value);
+  const currentWater = parseFloat(document.getElementById('asian-current-water').value);
+  const historicalRecord = document.getElementById('asian-historical-record').value;
+  const matchName = document.getElementById('asian-match-name').value;
 
-            // 验证输入
-            if (isNaN(initialHandicap) || isNaN(currentHandicap) ||
-                isNaN(initialWater) || isNaN(currentWater) ||
-                !historicalRecord) {
-                return;
-            }
+  // 验证输入
+  if (isNaN(initialHandicap) || isNaN(currentHandicap) ||
+    isNaN(initialWater) || isNaN(currentWater) ||
+    !historicalRecord) {
+    return;
+  }
 
-            // 计算盘口和水位变化
-            const handicapChange = currentHandicap - initialHandicap;
-            const waterChange = currentWater - initialWater;
+  // 显示加载状态
+  const resultElement = document.getElementById('asian-recommendation-result');
+  resultElement.textContent = "计算中...";
+  resultElement.className = "recommendation-result recommendation-neutral";
 
-            // 确定盘口变化方向
-            const handicapUp = handicapChange > 0;
-            const handicapDown = handicapChange < 0;
+  try {
+    // 调用服务器 API
+    const response = await fetch('/api/recommendation', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        type: 'asian',
+        initialHandicap,
+        currentHandicap,
+        initialWater,
+        currentWater,
+        historicalRecord,
+        matchName
+      })
+    });
 
-            // 确定水位变化方向
-            const waterUp = waterChange > 0;
-            const waterDown = waterChange < 0;
+    const data = await response.json();
 
-            let recommendation = "";
+    if (!response.ok) {
+      throw new Error(data.error || '服务器错误');
+    }
 
-            // 根据规则计算推荐结果
-            // 规则1: 盘口升，水位升，历史战绩赢 -> 下盘
-            if (handicapUp && waterUp && historicalRecord === "win") {
-                recommendation = "下盘";
-            }
-            // 规则2: 盘口升，水位升，历史战绩输 -> 上盘
-            else if (handicapUp && waterUp && historicalRecord === "loss") {
-                recommendation = "上盘";
-            }
-            // 规则3: 盘口降，水位升，历史战绩输 -> 下盘
-            else if (handicapDown && waterUp && historicalRecord === "loss") {
-                recommendation = "下盘";
-            }
-            // 规则4: 盘口降，水位升，历史战绩赢 -> 上盘
-            else if (handicapDown && waterUp && historicalRecord === "win") {
-                recommendation = "上盘";
-            }
-            // 规则5: 盘口升，水位降，历史战绩输 -> 下盘
-            else if (handicapUp && waterDown && historicalRecord === "loss") {
-                recommendation = "下盘";
-            }
-            // 规则6: 盘口升，水位降，历史战绩赢 -> 上盘
-            else if (handicapUp && waterDown && historicalRecord === "win") {
-                recommendation = "上盘";
-            }
-            // 规则7: 盘口降，水位降，历史战绩输 -> 上盘
-            else if (handicapDown && waterDown && historicalRecord === "loss") {
-                recommendation = "上盘";
-            }
-            // 规则8: 盘口降，水位降，历史战绩赢 -> 下盘
-            else if (handicapDown && waterDown && historicalRecord === "win") {
-                recommendation = "下盘";
-            } else {
-                // 如果没有匹配的规则（例如盘口或水位无变化）
-                recommendation = "无明确推荐";
-            }
+    // 显示推荐结果
+    resultElement.textContent = data.recommendation;
+    
+    if (data.recommendationType === 'up') {
+      resultElement.className = "recommendation-result recommendation-up";
+    } else if (data.recommendationType === 'down') {
+      resultElement.className = "recommendation-result recommendation-down";
+    } else {
+      resultElement.className = "recommendation-result recommendation-neutral";
+    }
 
-            // 显示推荐结果
-            const resultElement = document.getElementById('asian-recommendation-result');
-            resultElement.textContent = recommendation;
-            if (recommendation === "上盘") {
-                resultElement.className = "recommendation-result recommendation-up";
-            } else if (recommendation === "下盘") {
-                resultElement.className = "recommendation-result recommendation-down";
-            } else {
-                resultElement.className = "recommendation-result recommendation-neutral";
-            }
+    // 显示变化详情
+    const handicapChangeText = data.details.handicapChange > 0 ? `盘口上升 ${Math.abs(data.details.handicapChange)}` :
+      data.details.handicapChange < 0 ? `盘口下降 ${Math.abs(data.details.handicapChange)}` : "盘口无变化";
+    const waterChangeText = data.details.waterChange > 0 ? `水位上升 ${Math.abs(data.details.waterChange)}` :
+      data.details.waterChange < 0 ? `水位下降 ${Math.abs(data.details.waterChange)}` : "水位无变化";
+    const historicalText = data.details.historicalRecord === "win" ? "历史战绩: 赢" : "历史战绩: 输";
 
-            // 显示变化详情
-            const handicapChangeText = handicapChange > 0 ? `盘口上升 ${Math.abs(handicapChange)}` :
-                handicapChange < 0 ? `盘口下降 ${Math.abs(handicapChange)}` : "盘口无变化";
-            const waterChangeText = waterChange > 0 ? `水位上升 ${Math.abs(waterChange.toFixed(2))}` :
-                waterChange < 0 ? `水位下降 ${Math.abs(waterChange.toFixed(2))}` : "水位无变化";
-            const historicalText = historicalRecord === "win" ? "历史战绩: 赢" : "历史战绩: 输";
+    document.getElementById('asian-recommendation-details').textContent =
+      `${handicapChangeText} | ${waterChangeText} | ${historicalText}`;
 
-            document.getElementById('asian-recommendation-details').textContent =
-                `${handicapChangeText} | ${waterChangeText} | ${historicalText}`;
-        }
+    // 保存推荐结果到本地，用于后续保存记录
+    window.lastAsianRecommendation = data;
+
+  } catch (error) {
+    console.error('推荐计算失败:', error);
+    resultElement.textContent = "计算失败";
+    document.getElementById('asian-recommendation-details').textContent = 
+      "服务器错误，请检查网络连接";
+    
+    // 降级方案：使用本地计算
+    fallbackAsianCalculation(
+      initialHandicap,
+      currentHandicap,
+      initialWater,
+      currentWater,
+      historicalRecord
+    );
+  }
+}
 
         // ============== 大小盘计算函数 ============== //
         function autoCalculateSizeRecommendation() {
@@ -2995,93 +3026,90 @@
             }
         }
 
-        function calculateSizeRecommendation() {
-            const initialHandicap = parseFloat(document.getElementById('size-initial-handicap').value);
-            const currentHandicap = parseFloat(document.getElementById('size-current-handicap').value);
-            const initialWater = parseFloat(document.getElementById('size-initial-water').value);
-            const currentWater = parseFloat(document.getElementById('size-current-water').value);
-            const historicalRecord = document.getElementById('size-historical-record').value;
+ async function calculateSizeRecommendation() {
+  const initialHandicap = parseFloat(document.getElementById('size-initial-handicap').value);
+  const currentHandicap = parseFloat(document.getElementById('size-current-handicap').value);
+  const initialWater = parseFloat(document.getElementById('size-initial-water').value);
+  const currentWater = parseFloat(document.getElementById('size-current-water').value);
+  const historicalRecord = document.getElementById('size-historical-record').value;
+  const matchName = document.getElementById('size-match-name').value;
 
-            // 验证输入
-            if (isNaN(initialHandicap) || isNaN(currentHandicap) ||
-                isNaN(initialWater) || isNaN(currentWater) ||
-                !historicalRecord) {
-                return;
-            }
+  // 验证输入
+  if (isNaN(initialHandicap) || isNaN(currentHandicap) ||
+    isNaN(initialWater) || isNaN(currentWater) ||
+    !historicalRecord) {
+    return;
+  }
 
-            // 计算盘口和水位变化
-            const handicapChange = currentHandicap - initialHandicap;
-            const waterChange = currentWater - initialWater;
+  // 显示加载状态
+  const resultElement = document.getElementById('size-recommendation-result');
+  resultElement.textContent = "计算中...";
+  resultElement.className = "recommendation-result size-recommendation-neutral";
 
-            // 确定盘口变化方向
-            const handicapUp = handicapChange > 0;
-            const handicapDown = handicapChange < 0;
+  try {
+    // 调用服务器 API
+    const response = await fetch('/api/recommendation', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        type: 'size',
+        initialHandicap,
+        currentHandicap,
+        initialWater,
+        currentWater,
+        historicalRecord,
+        matchName
+      })
+    });
 
-            // 确定水位变化方向
-            const waterUp = waterChange > 0;
-            const waterDown = waterChange < 0;
+    const data = await response.json();
 
-            let recommendation = "";
+    if (!response.ok) {
+      throw new Error(data.error || '服务器错误');
+    }
 
-            // 根据规则计算推荐结果（与让球盘相同规则，但输出不同）
-            // 规则1: 盘口升，水位升，历史战绩赢 -> 小球
-            if (handicapUp && waterUp && historicalRecord === "win") {
-                recommendation = "小球";
-            }
-            // 规则2: 盘口升，水位升，历史战绩输 -> 大球
-            else if (handicapUp && waterUp && historicalRecord === "loss") {
-                recommendation = "大球";
-            }
-            // 规则3: 盘口降，水位升，历史战绩输 -> 小球
-            else if (handicapDown && waterUp && historicalRecord === "loss") {
-                recommendation = "小球";
-            }
-            // 规则4: 盘口降，水位升，历史战绩赢 -> 大球
-            else if (handicapDown && waterUp && historicalRecord === "win") {
-                recommendation = "大球";
-            }
-            // 规则5: 盘口升，水位降，历史战绩输 -> 小球
-            else if (handicapUp && waterDown && historicalRecord === "loss") {
-                recommendation = "小球";
-            }
-            // 规则6: 盘口升，水位降，历史战绩赢 -> 大球
-            else if (handicapUp && waterDown && historicalRecord === "win") {
-                recommendation = "大球";
-            }
-            // 规则7: 盘口降，水位降，历史战绩输 -> 大球
-            else if (handicapDown && waterDown && historicalRecord === "loss") {
-                recommendation = "大球";
-            }
-            // 规则8: 盘口降，水位降，历史战绩赢 -> 小球
-            else if (handicapDown && waterDown && historicalRecord === "win") {
-                recommendation = "小球";
-            } else {
-                // 如果没有匹配的规则（例如盘口或水位无变化）
-                recommendation = "无明确推荐";
-            }
+    // 显示推荐结果
+    resultElement.textContent = data.recommendation;
+    
+    if (data.recommendationType === 'up') {
+      resultElement.className = "recommendation-result size-recommendation-up";
+    } else if (data.recommendationType === 'down') {
+      resultElement.className = "recommendation-result size-recommendation-down";
+    } else {
+      resultElement.className = "recommendation-result size-recommendation-neutral";
+    }
 
-            // 显示推荐结果
-            const resultElement = document.getElementById('size-recommendation-result');
-            resultElement.textContent = recommendation;
-            if (recommendation === "大球") {
-                resultElement.className = "recommendation-result size-recommendation-up";
-            } else if (recommendation === "小球") {
-                resultElement.className = "recommendation-result size-recommendation-down";
-            } else {
-                resultElement.className = "recommendation-result size-recommendation-neutral";
-            }
+    // 显示变化详情
+    const handicapChangeText = data.details.handicapChange > 0 ? `大小盘上升 ${Math.abs(data.details.handicapChange)}` :
+      data.details.handicapChange < 0 ? `大小盘下降 ${Math.abs(data.details.handicapChange)}` : "大小盘无变化";
+    const waterChangeText = data.details.waterChange > 0 ? `水位上升 ${Math.abs(data.details.waterChange)}` :
+      data.details.waterChange < 0 ? `水位下降 ${Math.abs(data.details.waterChange)}` : "水位无变化";
+    const historicalText = data.details.historicalRecord === "win" ? "历史战绩: 赢" : "历史战绩: 输";
 
-            // 显示变化详情
-            const handicapChangeText = handicapChange > 0 ? `大小盘上升 ${Math.abs(handicapChange)}` :
-                handicapChange < 0 ? `大小盘下降 ${Math.abs(handicapChange)}` : "大小盘无变化";
-            const waterChangeText = waterChange > 0 ? `水位上升 ${Math.abs(waterChange.toFixed(2))}` :
-                waterChange < 0 ? `水位下降 ${Math.abs(waterChange.toFixed(2))}` : "水位无变化";
-            const historicalText = historicalRecord === "win" ? "历史战绩: 赢" : "历史战绩: 输";
+    document.getElementById('size-recommendation-details').textContent =
+      `${handicapChangeText} | ${waterChangeText} | ${historicalText}`;
 
-            document.getElementById('size-recommendation-details').textContent =
-                `${handicapChangeText} | ${waterChangeText} | ${historicalText}`;
-        }
+    // 保存推荐结果到本地
+    window.lastSizeRecommendation = data;
 
+  } catch (error) {
+    console.error('推荐计算失败:', error);
+    resultElement.textContent = "计算失败";
+    document.getElementById('size-recommendation-details').textContent = 
+      "服务器错误，请检查网络连接";
+    
+    // 降级方案
+    fallbackSizeCalculation(
+      initialHandicap,
+      currentHandicap,
+      initialWater,
+      currentWater,
+      historicalRecord
+    );
+  }
+}
         // ============== 保存记录功能 ============== //
         // 保存让球盘记录
         function saveAsianRecord() {
